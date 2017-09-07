@@ -211,6 +211,7 @@ Save the data set using into a csv file. Hint: look into write.csv()
 ```{r}
 ?write.csv
 
+write.csv(finalData,file = "AutismData")
 ```
 
 
@@ -226,7 +227,26 @@ List all kids who:
 3. have not completed all trials. Tip: Use pipes to solve this
 
 ```{r}
+install.packages("tidyverse")
+library(tidyverse)
 
+#more than 2.7
+child_MLU=filter(finalData,CHI_MLU>2.7)
+length(child_MLU)
+child_MLU$ID
+unique(child_MLU$ID)
+
+#less than 1.5
+child_MLU2=filter(finalData,CHI_MLU<1.5,Visit==1)
+length(child_MLU)
+child_MLU$ID
+unique(child_MLU$ID)
+
+#Not all trials
+#Function for visit pr ID then we can filter afterwards
+
+missed = finalData %>% group_by(ID) %>% tally()
+filter(missed, n < 6)
 
 ```
 
@@ -239,6 +259,15 @@ USING ARRANGE
 ```{r}
 
 
+visit6most = subset(finalData[finalData$Visit == 6,])
+arrangedvisit6 = arrange(visit6, desc(tokens_CHI))
+head(arrangedvisit6)
+#Child ID 55 produced the most words on the 6th visit
+
+visit1less= subset(finalData[finalData$Visit == 1,])
+arrangedVisit1 = arrange(Visit1, (tokens_CHI))
+head(arrangedVisit1)
+
 ```
 
 USING SELECT
@@ -247,7 +276,9 @@ USING SELECT
 2. What happens if you include the name of a variable multiple times in a select() call?
 
 ```{r}
+Kidsonly=select(finalData,ID,Visit,Diagnosis,CHI_MLU, tokens_CHI)
 
+Kidsonly=filter(Kidsonly,Diagnosis=="ASD")
 ```
 
 
