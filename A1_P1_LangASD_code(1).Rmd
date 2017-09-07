@@ -38,7 +38,7 @@ N.B. Create a GitHub repository for the Language Development in ASD set of assig
 Set the working directory (the directory with your data and code for these assignments):
 
 ```{r}
-setwd("~/Desktop/Cognitive Science/3. semester/Experimental Methods 3/Rstudio/Assignment 1.1")
+setwd("~/Desktop/Cognitive Science/3. semester/Experimental Methods 3/Rstudio/Assignment-1.2")
 ```
 
 Load the three data sets, after downloading them from dropbox and saving them in your working directory:
@@ -73,7 +73,7 @@ names(demo.train)[names(demo.train)=="VISIT"]="Visit"
 names(token.train)[names(token.train)=="VISIT"]="Visit"
 
 #Making ID
-names(lu.train)[names(lu.train)=="Child.ID"]="ID"
+names(lu.train)[names(lu.train)=="SUBJ"]="ID"
 names(demo.train)[names(demo.train)=="Child.ID"]="ID"
 names(token.train)[names(token.train)=="SUBJ"]="ID"
 ```
@@ -102,8 +102,12 @@ Tip: You will have to do identical work for both data sets, so to save time on t
 
 
 ```{r}
-?gsub
+
+demo.train$ID = gsub("\\.","",demo.train$ID)
+lu.train$ID = gsub("\\.","",lu.train$ID)
+token.train$ID = gsub("\\.","",token.train$ID)
 ```
+
 
 2d. Now that the nitty gritty details of the different data sets are fixed, we want to make a subset of each data set only containig the variables that we wish to use in the final data set.
 For this we use the tidyverse package, which contain the function select(). 
@@ -120,8 +124,15 @@ The variables we need are: Child.ID, Visit, Ethnicity, Diagnosis, Gender, Age, A
 It would be smart to rename the MullenRaw and ExpressiveLangRaw into something you can remember (i.e. nonVerbalIQ, verbalIQ)
 
 ```{r}
+library(dplyr)
+demo.train_sub = select(demo.train,ID,Visit, Ethnicity, Diagnosis, Gender, Age, ADOS,  MullenRaw, ExpressiveLangRaw)
 
+lu.train_sub = select(lu.train,ID,Visit, MOT_MLU, MOT_LUstd, CHI_MLU, CHI_LUstd)
 
+token.train_sub = select(token.train,ID,Visit,types_MOT,types_CHI,tokens_CHI)
+
+names(demo.train_sub)[names(demo.train_sub)=="ExpressiveLangRaw"]="verbalIQ"
+names(demo.train_sub)[names(demo.train_sub)=="MullenRaw"]="nonverbalIQ"
 ```
 
 2e. Finally we are ready to merge all the data sets into just one. 
@@ -131,6 +142,8 @@ Tip: Merge only works for two data frames at the time.
 Tip: Check the number of observations in the datasets before and after merging. What is going on?
 
 ```{r}
+luandtoken = merge(lu.train_sub,token.train_sub,by=c("ID","Visit"))
+joineedData = merge(luandtoken,demo.train_sub,by=c("ID","Visit"))
 
 ```
 
@@ -145,6 +158,17 @@ Tip: the final dataset should have as many rows as the the old one.
 
 
 ```{r}
+library(tidyr)
+
+Visit1 = subset(joineedData[joineedData$Visit =="1",])
+#Det relevante data
+Relevantdata = select(Visit1,ID,ADOS,nonverbalIQ,verbalIQ)
+
+#Sletter det releveante data fra joineed dataset
+joineedData2=joineedData[-15:-17]
+
+#merger tilbage til joineed data
+finalData = merge(joineedData2,Relevantdata,by ="ID")
 
 ```
 
@@ -159,7 +183,25 @@ Tip: as.numeric() might be a useful function, but not alone.
 Tip: Google "how to rename levels in R".
 
 ```{r}
+#Anonysing ID by enumering it
+finalData$ID = as.factor(finalData$ID)
 
+levels(finalData$ID) = 1:length(levels(finalData$ID))
+
+#Visit needs to be numeric
+finalData$Visit = as.numeric(finalData$Visit)
+
+#Renaming Gender into F and M
+library(plyr)
+
+finalData$Gender=as.factor(finalData$Gender)
+
+finalData$Gender=revalue(finalData$Gender,c("1"="F", "2"="M"))
+
+#Renaming diagnosis in the same way
+finalData$Diagnosis=as.factor(finalData$Diagnosis)
+
+finalData$Diagnosis=revalue(finalData$Diagnosis,c("A"="ASD", "B"="TD"))
 
 ```
 
@@ -167,6 +209,7 @@ Tip: Google "how to rename levels in R".
 Save the data set using into a csv file. Hint: look into write.csv()
 
 ```{r}
+?write.csv
 
 ```
 
