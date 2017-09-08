@@ -129,7 +129,7 @@ demo.train_sub = select(demo.train,ID,Visit, Ethnicity, Diagnosis, Gender, Age, 
 
 lu.train_sub = select(lu.train,ID,Visit, MOT_MLU, MOT_LUstd, CHI_MLU, CHI_LUstd)
 
-token.train_sub = select(token.train,ID,Visit,types_MOT,types_CHI,tokens_CHI)
+token.train_sub = select(token.train,ID,Visit,types_MOT,types_CHI,tokens_CHI,tokens_MOT)
 
 names(demo.train_sub)[names(demo.train_sub)=="ExpressiveLangRaw"]="verbalIQ"
 names(demo.train_sub)[names(demo.train_sub)=="MullenRaw"]="nonverbalIQ"
@@ -229,6 +229,7 @@ List all kids who:
 ```{r}
 install.packages("tidyverse")
 library(tidyverse)
+finalData = read.csv("AutismData", sep = ",")
 
 #more than 2.7
 child_MLU=filter(finalData,CHI_MLU>2.7)
@@ -265,7 +266,7 @@ head(arrangedvisit6)
 #Child ID 55 produced the most words on the 6th visit
 
 visit1less= subset(finalData[finalData$Visit == 1,])
-arrangedVisit1 = arrange(Visit1, (tokens_CHI))
+arrangedVisit1 = arrange(visit1less, (tokens_CHI))
 head(arrangedVisit1)
 
 ```
@@ -288,6 +289,23 @@ USING MUTATE, SUMMARISE and PIPES
 3. The solution to task above enables us to assess the average amount of words produced by each child. Why don't we just use these average values to describe the language production of the children? What is the advantage of keeping all the data?
 
 ```{r}
+library(dplyr)
 
+## Task 1 
+
+data = mutate(finalData, GrandChildAvg = mean(tokens_CHI))
+
+tokensAllVisits = finalData %>% group_by(ID) %>%summarise(meanWordsTotal = mean(tokens_CHI))
+
+mergedData = merge(finalData, tokensAllVisits, by = "ID")
+
+## Task 2 
+
+
+## Task 3 
+
+tokensaverage= mergedData %>% group_by(ID) %>%summarise(meanWordsChild = mean(tokens_CHI))
+
+mergedData2 = merge(mergedData, tokensaverage, by = "ID" )
 
 ```
